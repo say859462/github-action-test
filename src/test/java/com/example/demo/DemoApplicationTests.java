@@ -14,4 +14,10 @@ class DemoApplicationTests {
 		Assertions.assertEquals(1,2);
 	}
 
+	@Test
+	@DisplayName("test1:")
+	void test1() {
+		Assertions.assertEquals(1,2);
+	}
+
 }
