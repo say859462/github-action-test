@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no" id="viewport" name="viewport">
+    <title>EMO</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!--CryptoJS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <!-- 圓餅圖 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Bootstrap JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <!-- 載入字型 -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Crimson+Pro">
+
+    <!-- Bootstrap CSS -->
+<!--    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">-->
+    <!-- Bootstrap Icons CSS
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.19.0/font/bootstrap-icons.css">-->
+    <link rel="stylesheet" href="/frontend/boostrap.min.css">
+    <link rel="stylesheet" href="/frontend/recordFW.css">
+    <link rel="stylesheet" href="/frontend/setting.css">
+    <style>
+        body {
+            background-color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow:hidden;
+        }
+        #map {
+            height: 100vh;
+            width: 100%;
+            position: absolute;
+            z-index: 0;
+        }
+        .container, .container-fluid, .container-lg, .container-md, .container-sm, .container-xl {
+            width: 100%;
+            height:100vh;
+            padding-right: 0px;
+            padding-left: 0px;
+            margin-right: auto;
+            margin-left: auto;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- Google Map -->
+    <div style="display:flex;" id="map"></div>
+    <!-- 使用者帳號 -->
+    <div class="showUser">
+        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-person-circle" id="userIcon" viewBox="0 0 16 16">
+            <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
+            <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/>
+        </svg>
+        <p id="user"> </p>
+    </div>
+    <!-- 主按鈕區 -->
+    <div id="recordBtns">
+        <!-- 紀錄鈕 -->
+        <button class="recordButton" id="openRecordModal"> 一般記錄 </button>
+        <!-- 路線紀錄按鈕-->
+        <button class="recordButton" id="startRecording"> 路線記錄 </button>
+        <!-- 查看紀錄鈕 -->
+        <button class="recordButton" id="recordListButton"> 查看紀錄 </button>
+    </div>
+    <div>
+        <!-- admin -->
+        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" id="adminButton" viewBox="0 0 25 25" style="display: none;">
+            <path d="M22.3,16.7l1.4-1.4L20,11.6l-5.8,5.8c-0.5-0.3-1.1-0.4-1.7-0.4C10.6,17,9,18.6,9,20.5s1.6,3.5,3.5,3.5s3.5-1.6,3.5-3.5   c0-0.6-0.2-1.2-0.4-1.7l1.9-1.9l2.3,2.3l1.4-1.4l-2.3-2.3l1.1-1.1L22.3,16.7z M12.5,22c-0.8,0-1.5-0.7-1.5-1.5s0.7-1.5,1.5-1.5   s1.5,0.7,1.5,1.5S13.3,22,12.5,22z"/>
+            <path d="M2,19c0-3.9,3.1-7,7-7c2,0,3.9,0.9,5.3,2.4l1.5-1.3c-0.9-1-1.9-1.8-3.1-2.3C14.1,9.7,15,7.9,15,6c0-3.3-2.7-6-6-6   S3,2.7,3,6c0,1.9,0.9,3.7,2.4,4.8C2.2,12.2,0,15.3,0,19v5h8v-2H2V19z M5,6c0-2.2,1.8-4,4-4s4,1.8,4,4s-1.8,4-4,4S5,8.2,5,6z"/>
+        </svg>
+        <!-- 設定按鈕 -->
+        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-gear-wide-connected" id="settingButton" viewBox="0 0 16 16">
+            <path d="M7.068.727c.243-.97 1.62-.97 1.864 0l.071.286a.96.96 0 0 0 1.622.434l.205-.211c.695-.719 1.888-.03 1.613.931l-.08.284a.96.96 0 0 0 1.187 1.187l.283-.081c.96-.275 1.65.918.931 1.613l-.211.205a.96.96 0 0 0 .434 1.622l.286.071c.97.243.97 1.62 0 1.864l-.286.071a.96.96 0 0 0-.434 1.622l.211.205c.719.695.03 1.888-.931 1.613l-.284-.08a.96.96 0 0 0-1.187 1.187l.081.283c.275.96-.918 1.65-1.613.931l-.205-.211a.96.96 0 0 0-1.622.434l-.071.286c-.243.97-1.62.97-1.864 0l-.071-.286a.96.96 0 0 0-1.622-.434l-.205.211c-.695.719-1.888.03-1.613-.931l.08-.284a.96.96 0 0 0-1.186-1.187l-.284.081c-.96.275-1.65-.918-.931-1.613l.211-.205a.96.96 0 0 0-.434-1.622l-.286-.071c-.97-.243-.97-1.62 0-1.864l.286-.071a.96.96 0 0 0 .434-1.622l-.211-.205c-.719-.695-.03-1.888.931-1.613l.284.08a.96.96 0 0 0 1.187-1.186l-.081-.284c-.275-.96.918-1.65 1.613-.931l.205.211a.96.96 0 0 0 1.622-.434l.071-.286zM12.973 8.5H8.25l-2.834 3.779A4.998 4.998 0 0 0 12.973 8.5zm0-1a4.998 4.998 0 0 0-7.557-3.779l2.834 3.78h4.723zM5.048 3.967c-.03.021-.058.043-.087.065l.087-.065zm-.431.355A4.984 4.984 0 0 0 3.002 8c0 1.455.622 2.765 1.615 3.678L7.375 8 4.617 4.322zm.344 7.646.087.065-.087-.065z"/>
+        </svg>
+    </div>
+</div>
+
+<!-- 懸浮窗：設定 -->
+<div id="settingFW" onclick="closeFW(event)">
+    <div id="settingModal" class="settingContainer">
+        <!-- 關閉 -->
+        <button class="btn" id="closeSettingModal" style="top:10px; right:10px;">
+            <svg viewBox="0 0 20 20" height="17.5" width="15" xmlns="http://www.w3.org/2000/svg" class="icon">
+                <g>
+                    <line x1="16.9999" y1="7" x2="7.00001" y2="16.9999" id="Path" stroke="#0C0310" stroke-width="2" stroke-linecap="round"> </line>
+                    <line x1="7.00006" y1="7" x2="17" y2="16.9999" id="Path" stroke="#0C0310" stroke-width="2" stroke-linecap="round"> </line>
+                </g>
+            </svg>
+        </button>
+
+        <div class="recordHeading" id="settingModalLabel">設定</div>
+        <div style="font-family: 'Crimson Pro', serif; font-size: 15px; display: inline">總減碳量為</div>
+        <div id="totalFootprint" style="font-family: 'Crimson Pro', serif; font-size: 15px;"></div>
+
+        <!-- 設定選項-->
+        <button class="setBtn" id="rename">
+            <div class="setIcon">
+                <svg width="800px" height="800px" viewBox="0 0 24 24" fill="none">
+                    <path d="M11.4001 18.1612L11.4001 18.1612L18.796 10.7653C17.7894 10.3464 16.5972 9.6582 15.4697 8.53068C14.342 7.40298 13.6537 6.21058 13.2348 5.2039L5.83882 12.5999L5.83879 12.5999C5.26166 13.1771 4.97307 13.4657 4.7249 13.7838C4.43213 14.1592 4.18114 14.5653 3.97634 14.995C3.80273 15.3593 3.67368 15.7465 3.41556 16.5208L2.05445 20.6042C1.92743 20.9852 2.0266 21.4053 2.31063 21.6894C2.59466 21.9734 3.01478 22.0726 3.39584 21.9456L7.47918 20.5844C8.25351 20.3263 8.6407 20.1973 9.00498 20.0237C9.43469 19.8189 9.84082 19.5679 10.2162 19.2751C10.5343 19.0269 10.823 18.7383 11.4001 18.1612Z" fill="#1C274C"/>
+                    <path d="M20.8482 8.71306C22.3839 7.17735 22.3839 4.68748 20.8482 3.15178C19.3125 1.61607 16.8226 1.61607 15.2869 3.15178L14.3999 4.03882C14.4121 4.0755 14.4246 4.11268 14.4377 4.15035C14.7628 5.0875 15.3763 6.31601 16.5303 7.47002C17.6843 8.62403 18.9128 9.23749 19.85 9.56262C19.8875 9.57563 19.9245 9.58817 19.961 9.60026L20.8482 8.71306Z" fill="#1C274C"/>
+                </svg>
+            </div>
+            <div class="setText">修改暱稱</div>
+        </button>
+        <button class="setBtn" id="logoutAccount">
+            <div class="setIcon">
+                <svg viewBox="0 0 512 512">
+                    <path d="M377.9 105.9L500.7 228.7c7.2 7.2 11.3 17.1 11.3 27.3s-4.1 20.1-11.3 27.3L377.9 406.1c-6.4 6.4-15 9.9-24 9.9c-18.7 0-33.9-15.2-33.9-33.9l0-62.1-128 0c-17.7 0-32-14.3-32-32l0-64c0-17.7 14.3-32 32-32l128 0 0-62.1c0-18.7 15.2-33.9 33.9-33.9c9 0 17.6 3.6 24 9.9zM160 96L96 96c-17.7 0-32 14.3-32 32l0 256c0 17.7 14.3 32 32 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-64 0c-53 0-96-43-96-96L0 128C0 75 43 32 96 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32z"></path>
+                </svg>
+            </div>
+            <div class="setText">登出</div>
+        </button>
+        <button class="setBtn" style="background-color: rgb(255, 69, 69);" id="deleteAccount">
+            <div style="padding-left: 14px">
+                <svg xmlns="http://www.w3.org/2000/svg" width="30px" height="30px" viewBox="0 0 24 24" fill="white">
+                    <path d="M5 6.77273H9.2M19 6.77273H14.8M9.2 6.77273V5.5C9.2 4.94772 9.64772 4.5 10.2 4.5H13.8C14.3523 4.5 14.8 4.94772 14.8 5.5V6.77273M9.2 6.77273H14.8M6.4 8.59091V15.8636C6.4 17.5778 6.4 18.4349 6.94673 18.9675C7.49347 19.5 8.37342 19.5 10.1333 19.5H13.8667C15.6266 19.5 16.5065 19.5 17.0533 18.9675C17.6 18.4349 17.6 17.5778 17.6 15.8636V8.59091M9.2 10.4091V15.8636M12 10.4091V15.8636M14.8 10.4091V15.8636" stroke="white" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <div class="setText">刪除帳號</div>
+        </button>
+    </div>
+</div>
+<!-- 懸浮窗：管理員 -->
+<div id="adminFW" onclick="closeFW(event)">
+    <div id="adminModal" class="settingContainer" style="margin: 20px">
+        <!-- 關閉 -->
+        <button class="btn" id="closeAdminModal" style="top:10px; right:10px;">
+            <svg viewBox="0 0 20 20" height="17.5" width="15" xmlns="http://www.w3.org/2000/svg" class="icon">
+                <g>
+                    <line x1="16.9999" y1="7" x2="7.00001" y2="16.9999" id="Path" stroke="#0C0310" stroke-width="2" stroke-linecap="round"> </line>
+                    <line x1="7.00006" y1="7" x2="17" y2="16.9999" id="Path" stroke="#0C0310" stroke-width="2" stroke-linecap="round"> </line>
+                </g>
+            </svg>
+        </button>
+
+        <div class="recordHeading" id="adminModalLabel">管理員設置</div>
+        <div id="adminData" style="font-family: 'Crimson Pro', serif; font-size: 15px;"></div>
+
+
+        <div style="display: flex; margin-top: 5px; width: 200px;">
+            <input id="editFP" class="save-button" type="submit" value="編輯" style="flex: 1;">
+            <input id="saveFP" class="save-button" type="submit" value="完成" style="display: none; flex: 1;">
+            <input id="deleteFP" class="save-button" type="submit" value="刪除" style="display: none; flex: 1;">
+        </div>
+    </div>
+</div>
+<!-- 懸浮窗：修改暱稱 -->
+<div id="renameFW" onclick="closeFW(event)">
+    <div id="renameModal" class="settingContainer" style="width:330px; height: 250px;">
+        <!-- 關閉 -->
+        <button class="btn" id="closeRenameModal" style="top:10px; right:10px;">
+            <svg viewBox="0 0 20 20" height="17.5" width="15" xmlns="http://www.w3.org/2000/svg" class="icon">
+                <g>
+                    <line x1="16.9999" y1="7" x2="7.00001" y2="16.9999" id="Path" stroke="#0C0310" stroke-width="2" stroke-linecap="round"> </line>
+                    <line x1="7.00006" y1="7" x2="17" y2="16.9999" id="Path" stroke="#0C0310" stroke-width="2" stroke-linecap="round"> </line>
+                </g>
+            </svg>
+        </button>
+
+        <div class="recordHeading" id="renameAuthModalLabel">修改暱稱</div>
+        <!-- 驗證密碼-->
+        <input id="newName" name="rename" class="input" type="text">
+
+        <button class="setBtn" id="renameBtn" style="background-color: rgb(255, 69, 69); width: 125px; margin-top: 30px;">
+            <div class="setText" style="right: 12%">確認修改</div>
+        </button>
+    </div>
+</div>
+<!-- 懸浮窗：確認刪除 -->
+<div id="deleteFW" onclick="closeFW(event)">
+    <div id="deleteModal" class="settingContainer" style="width:330px;">
+        <!-- 關閉 -->
+        <button class="btn" id="closeDeleteModal" style="top:10px; right:10px;">
+            <svg viewBox="0 0 20 20" height="17.5" width="15" xmlns="http://www.w3.org/2000/svg" class="icon">
+                <g>
+                    <line x1="16.9999" y1="7" x2="7.00001" y2="16.9999" id="Path" stroke="#0C0310" stroke-width="2" stroke-linecap="round"> </line>
+                    <line x1="7.00006" y1="7" x2="17" y2="16.9999" id="Path" stroke="#0C0310" stroke-width="2" stroke-linecap="round"> </line>
+                </g>
+            </svg>
+        </button>
+
+        <div class="recordHeading" id="deleteAuthModalLabel">確定要刪除嗎？</div>
+        <div style="font-family: 'Crimson Pro', serif; font-size: 15px; display: inline" id="deleteDataTime">123</div>
+        <div style="font-family: 'Crimson Pro', serif; font-size: 15px; display: inline" id="deleteDataDaily"></div>
+        <div style="font-family: 'Crimson Pro', serif; font-size: 15px; display: inline" id="deleteDataTraffic"></div>
+        <div style="font-family: 'Crimson Pro', serif; font-size: 15px; display: inline" id="deleteDataFP"></div>
+        <!-- 驗證密碼-->
+        <input id="passwordAuth" name="passwordAuth" class="input" type="text" placeholder="請輸入使用者密碼">
+
+        <button class="setBtn" id="delete" style="background-color: rgb(255, 69, 69); width: 125px; margin-top: 30px;">
+            <div class="setText" style="right: 12%">狠心離開</div>
+        </button>
+    </div>
+</div>
+
+<!-- 懸浮窗：新增紀錄 -->
+<div id="recordFW" onclick="closeFW(event)">
+    <div id="activityModal" class="recordContainer">
+        <!-- 關閉 -->
+        <button class="btn"  id="closeRecordModal">
+            <svg viewBox="0 0 20 20" height="17.5" width="15" xmlns="http://www.w3.org/2000/svg" class="icon">
+                <g>
+                    <line x1="16.9999" y1="7" x2="7.00001" y2="16.9999" id="Path" stroke="#0C0310" stroke-width="2" stroke-linecap="round"> </line>
+                    <line x1="7.00006" y1="7" x2="17" y2="16.9999" id="Path" stroke="#0C0310" stroke-width="2" stroke-linecap="round"> </line>
+                </g>
+            </svg>
+        </button>
+
+        <div class="recordHeading" id="activityModalLabel">行為記錄</div>
+        <!-- 類別選項 -->
+        <form action="" class="recordForm">
+            <div class="radio-inputs" id="classType" name="radio">
+                <!-- 類別選項/交通 -->
+                <label id="trafficLabel" style="display: none">
+                    <input id="trafficRadio" class="radio-input" type="radio" name="engine">
+                    <span class="radio-tile">
+                        <span class="radio-icon">
+                            <svg stroke="currentColor" xml:space="preserve" viewBox="0 0 260 260" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" id="Capa_1" version="1.1" width="200px" height="200px" fill="none">
+                              <g stroke-width="0" id="SVGRepo_bgCarrier"></g>
+                              <g stroke-linejoin="round" stroke-linecap="round" id="SVGRepo_tracerCarrier"></g>
+                              <g id="SVGRepo_iconCarrier">
+                                <path d="M188,28H68A28.03146,28.03146,0,0,0,40,56V184a28.03146,28.03146,0,0,0,28,28H87.99951L68.7998,237.59961a4.00039,4.00039,0,0,0,6.4004,4.80078L98.00049,212h59.999l22.80029,30.40039a4.00039,4.00039,0,1,0,6.4004-4.80078L168.00049,212H188a28.03146,28.03146,0,0,0,28-28V56A28.03146,28.03146,0,0,0,188,28ZM48,124V76h76v48Zm84-48h76v48H132ZM68,36H188a20.02229,20.02229,0,0,1,20,20V68H48V56A20.02229,20.02229,0,0,1,68,36ZM188,204H68a20.02229,20.02229,0,0,1-20-20V132H208v52A20.02229,20.02229,0,0,1,188,204ZM92,172a8,8,0,1,1-8-8A8.00917,8.00917,0,0,1,92,172Zm88,0a8,8,0,1,1-8-8A8.00917,8.00917,0,0,1,180,172Z"></path>
+                              </g>
+                            </svg>
+                        </span>
+                        <span class="radio-label" id="traffic">交通</span>
+                    </span>
+                </label>
+
+                <!-- 類別選項/生活用品 -->
+                <label id="dailyLabel">
+                    <input id="dailyRadio" class="radio-input" type="radio" name="engine" checked="true">
+                    <span class="radio-tile">
+                    <span class="radio-icon">
+                    <svg stroke="currentColor" xml:space="preserve" viewBox="0 0 960 960" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" id="Capa_1" version="1.1" width="10px" height="10px" fill="none">
+                        <g stroke-width="0" id="SVGRepo_bgCarrier"></g><g stroke-linejoin="round" stroke-linecap="round" id="SVGRepo_tracerCarrier"></g>
+                        <g id="SVGRepo_iconCarrier">
+                          <g> <g>
+                            <path d="M791.942 1023.906H152.072a7.94 7.94 0 0 1-5.78-2.484 7.946 7.946 0 0 1-2.21-5.876l31.994-703.862a8 8 0 0 1 4.412-6.794c3.446-1.726 34.19-16.84 51.568-16.84 9.888 0 18.878 4.498 27.572 8.842 7.358 3.678 14.302 7.154 20.41 7.154 6.108 0 13.06-3.476 20.416-7.154 8.702-4.344 17.692-8.842 27.574-8.842 9.88 0 18.872 4.498 27.572 8.842 7.358 3.678 14.308 7.154 20.416 7.154s13.06-3.476 20.418-7.154c8.702-4.344 17.692-8.842 27.572-8.842s18.872 4.49 27.572 8.842c7.358 3.678 14.318 7.154 20.426 7.154s13.06-3.476 20.416-7.154c8.694-4.344 17.684-8.842 27.572-8.842s18.872 4.498 27.572 8.842c7.358 3.678 14.31 7.154 20.418 7.154s13.06-3.476 20.418-7.154c8.702-4.344 17.684-8.842 27.572-8.842s18.872 4.498 27.572 8.842c7.358 3.678 14.31 7.154 20.418 7.154s13.06-3.476 20.418-7.154c8.702-4.344 17.684-8.842 27.572-8.842 17.386 0 48.116 15.114 51.566 16.84a7.98 7.98 0 0 1 4.406 6.794l31.992 703.862a7.91 7.91 0 0 1-2.202 5.876 7.904 7.904 0 0 1-5.772 2.484z m-631.496-15.998h623.12l-31.398-690.732c-10.56-4.936-30.212-13.13-40.21-13.13-6.11 0-13.06 3.476-20.418 7.154-8.702 4.344-17.684 8.842-27.572 8.842s-18.872-4.498-27.572-8.842c-7.358-3.678-14.308-7.154-20.418-7.154-6.108 0-13.058 3.476-20.418 7.154-8.702 4.344-17.684 8.842-27.572 8.842s-18.872-4.498-27.572-8.842c-7.358-3.678-14.308-7.154-20.418-7.154-6.108 0-13.058 3.476-20.416 7.154-8.694 4.344-17.684 8.842-27.572 8.842-9.888 0-18.878-4.498-27.582-8.842-7.358-3.678-14.308-7.154-20.416-7.154s-13.06 3.476-20.416 7.154c-8.702 4.344-17.692 8.842-27.574 8.842-9.88 0-18.872-4.498-27.572-8.842-7.358-3.678-14.31-7.154-20.416-7.154-6.11 0-13.06 3.476-20.418 7.154-8.702 4.344-17.692 8.842-27.572 8.842s-18.872-4.49-27.564-8.842c-7.358-3.678-14.31-7.154-20.418-7.154-9.154 0-27.94 7.374-40.218 13.122l-31.398 690.74z"></path>
+                            <path d="M759.948 991.912H184.066a7.994 7.994 0 0 1-7.998-7.998 7.994 7.994 0 0 1 7.998-7.998h575.88a7.994 7.994 0 0 1 7.998 7.998 7.992 7.992 0 0 1-7.996 7.998zM532.916 272.052a7.99 7.99 0 0 1-7.514-10.732l75.828-208.332C609.4 30.518 628.24 13.608 654.282 5.36c25.322-8.006 54.488-6.85 82.248 3.248 59.8 21.746 75.016 77.32 59.144 120.976l-33.698 136.394a7.978 7.978 0 0 1-9.684 5.842 8.004 8.004 0 0 1-5.844-9.686l33.948-137.206c12.996-35.882 2.92-82.28-49.334-101.292-24.464-8.896-50.006-9.944-71.954-3.024-21.2 6.708-36.414 20.152-42.852 37.844l-75.828 208.332a8 8 0 0 1-7.512 5.264z"></path>
+                            <path d="M748.668 165.702a7.97 7.97 0 0 1-6.748-3.71c-0.11-0.156-13.482-20.168-49.146-33.126-35.648-12.974-58.754-6.256-59.004-6.202-4.108 1.274-8.67-1.062-9.982-5.288a7.972 7.972 0 0 1 5.218-9.974c1.108-0.368 28.134-8.56 69.236 6.436 41.162 14.958 56.55 38.578 57.174 39.578a7.996 7.996 0 0 1-2.452 11.038 8.08 8.08 0 0 1-4.296 1.248zM715.832 255.9a7.976 7.976 0 0 1-6.75-3.71c-0.11-0.156-13.48-20.168-49.128-33.142-35.712-12.99-58.754-6.248-59.004-6.186-4.062 1.28-8.67-1.054-9.982-5.282a7.976 7.976 0 0 1 5.216-9.982c1.124-0.344 28.12-8.53 69.236 6.42 41.146 14.974 56.536 38.594 57.16 39.594a7.994 7.994 0 0 1-6.748 12.288zM216.052 272.052a7.998 7.998 0 0 1-7.912-6.866L176.146 41.234a8 8 0 0 1 6.788-9.052c4.39-0.664 8.428 2.414 9.052 6.788l31.994 223.954a8 8 0 0 1-7.928 9.128z"></path>
+                            <path d="M264.042 272.052a7.994 7.994 0 0 1-7.772-6.146c-0.398-1.664-40.084-167.082-78.708-221.158a7.994 7.994 0 0 1 1.858-11.154 7.986 7.986 0 0 1 11.154 1.858c40.438 56.614 79.61 219.83 81.258 226.75a7.996 7.996 0 0 1-7.79 9.85zM312.032 272.052a7.994 7.994 0 0 1-7.764-6.124c-35.812-148.296-78.648-221-79.078-221.72a8 8 0 0 1 2.756-10.966 7.988 7.988 0 0 1 10.966 2.75c1.804 3 44.444 75.204 80.898 226.188a7.986 7.986 0 0 1-5.898 9.646 7.734 7.734 0 0 1-1.88 0.226z"></path>
+                            <path d="M224.066 80.094c-0.64 0-1.296-0.078-1.946-0.242a7.988 7.988 0 0 1-5.82-9.694l8-31.994a7.958 7.958 0 0 1 9.694-5.818 7.986 7.986 0 0 1 5.818 9.694l-7.998 31.994a7.988 7.988 0 0 1-7.748 6.06zM504 272.052a7.994 7.994 0 0 1-7.998-7.998v-55.988h-143.97v55.988c0 4.422-3.578 7.998-7.998 7.998s-7.998-3.576-7.998-7.998v-63.986a7.994 7.994 0 0 1 7.998-7.998H504a7.994 7.994 0 0 1 7.998 7.998v63.986a7.994 7.994 0 0 1-7.998 7.998z"></path>
+                            <path d="M456.01 272.052a7.994 7.994 0 0 1-7.998-7.998c0-13.232-10.764-23.994-23.996-23.994s-23.996 10.762-23.996 23.994a7.994 7.994 0 0 1-7.998 7.998 7.992 7.992 0 0 1-7.998-7.998c0-22.05 17.942-39.992 39.992-39.992s39.992 17.942 39.992 39.992a7.994 7.994 0 0 1-7.998 7.998zM344.034 192.07a7.996 7.996 0 0 1-5.656-13.654l15.998-15.996a7.996 7.996 0 1 1 11.31 11.31l-15.998 15.996a7.964 7.964 0 0 1-5.654 2.344z"></path>
+                            <path d="M488.004 176.074h-127.974c-4.42 0-7.998-3.578-7.998-7.998s3.578-8 7.998-8h127.974c4.42 0 7.998 3.578 7.998 8s-3.578 7.998-7.998 7.998z"></path>
+                            <path d="M504 192.07a7.98 7.98 0 0 1-5.656-2.344l-15.998-15.996a7.996 7.996 0 1 1 11.31-11.31l15.998 15.996A7.996 7.996 0 0 1 504 192.07zM376.402 779.614a8.02 8.02 0 0 1-5.312-2.016c-32.446-28.838-51.052-70.236-51.052-113.618 0-83.794 68.172-151.976 151.968-151.976 11.348 0 22.66 1.258 33.626 3.726a7.994 7.994 0 0 1 6.044 9.558c-0.976 4.312-5.294 7.032-9.56 6.046a137.7 137.7 0 0 0-30.11-3.328c-74.978 0-135.972 60.988-135.972 135.972a136.104 136.104 0 0 0 45.678 101.65 8.006 8.006 0 0 1-5.31 13.986zM472.006 815.95a152.81 152.81 0 0 1-33.79-3.782 7.994 7.994 0 0 1-6.022-9.576c0.976-4.31 5.25-7.044 9.568-6.014a136.964 136.964 0 0 0 30.244 3.374c74.97 0 135.972-61.002 135.972-135.97a136.184 136.184 0 0 0-45.302-101.34 8 8 0 0 1-0.64-11.292c2.984-3.296 8.06-3.562 11.294-0.624a152.126 152.126 0 0 1 50.644 113.258c0 83.792-68.174 151.966-151.968 151.966z"></path>
+                            <path d="M504 703.972a7.98 7.98 0 0 1-5.656-2.344l-63.986-63.988a7.996 7.996 0 1 1 11.31-11.308l63.988 63.986a7.996 7.996 0 0 1-5.656 13.654z"></path>
+                            <path d="M440.014 639.984a7.994 7.994 0 0 1-5.656-13.652l159.966-159.974a7.996 7.996 0 1 1 11.31 11.31l-159.966 159.974a7.97 7.97 0 0 1-5.654 2.342zM360.03 847.942a7.994 7.994 0 0 1-5.654-13.652l143.97-143.97a7.996 7.996 0 1 1 11.31 11.31l-143.97 143.968a7.976 7.976 0 0 1-5.656 2.344zM759.948 320.042a7.988 7.988 0 0 1-6.404-3.202 8.006 8.006 0 0 1 1.608-11.192l63.986-47.99a7.99 7.99 0 0 1 11.202 1.602 8.006 8.006 0 0 1-1.608 11.192l-63.988 47.99c-1.44 1.078-3.124 1.6-4.796 1.6zM807.938 991.912a8.176 8.176 0 0 1-3.578-0.844 8.008 8.008 0 0 1-3.578-10.732l31.994-63.986c1.984-3.966 6.794-5.53 10.732-3.578a8.002 8.002 0 0 1 3.578 10.732l-31.994 63.988a8.016 8.016 0 0 1-7.154 4.42z"></path>
+                            <path d="M850.584 943.906a7.992 7.992 0 0 1-6.654-3.562l-10.654-15.98a7.996 7.996 0 0 1 2.218-11.092c3.624-2.452 8.624-1.482 11.092 2.218l10.652 15.982a8 8 0 0 1-6.654 12.434zM871.908 975.916a8.01 8.01 0 0 1-7.966-7.452L815.952 264.6a8.008 8.008 0 0 1 7.436-8.53c4.204-0.266 8.216 3.024 8.53 7.436l47.99 703.864a8.02 8.02 0 0 1-7.436 8.53c-0.188 0-0.376 0.016-0.564 0.016z"></path>
+                            <path d="M791.942 1023.906a8.004 8.004 0 0 1-6.86-3.89 7.976 7.976 0 0 1 2.75-10.966l79.984-47.99a7.994 7.994 0 1 1 8.214 13.716l-79.982 47.99c-1.28 0.766-2.702 1.14-4.106 1.14z"></path>
+                            <path d="M823.934 272.052h-31.992c-4.422 0-8-3.576-8-7.998a7.994 7.994 0 0 1 8-7.998h31.992a7.994 7.994 0 0 1 7.998 7.998 7.992 7.992 0 0 1-7.998 7.998z"></path>
+                          </g> </g>
+                        </g>
+                    </svg>
+                    </span>
+                    <span class="radio-label" id="daily">生活用品</span>
+                    </span>
+                </label>
+            </div>
+
+            <!-- 行為選項 -->
+            <!-- 行為選項/SPACE -->
+            <label id="subType">
+                <div id="SPACE"  style="display: none;">
+                    <select id="categorySelect" class="recordForm-control" name="category">
+                        <option disabled>請先選擇類別</option>
+                    </select>
+                    <input required="" class="input" type="text" placeholder="請先選擇類別" disabled="disabled">
+                </div>
+
+                <!-- 行為選項/交通 -->
+                <div id="trafficMenu" style="display: none;">
+                    <select class="recordForm-control" id="trafficType" name="trafficType">
+                        <option value="traffic-bus">公車</option>
+                        <option value="traffic-MRT">捷運</option>
+                        <option value="traffic-train">火車</option>
+                        <option value="traffic-HSR">高鐵</option>
+                    </select>
+                    <input id="kilometer" name="kilometer" class="input" type="number" placeholder="請輸入里程數(KM)">
+                </div>
+
+                <!-- 行為選項/生活用品 -->
+                <div id="dailyMenu" style="display: block;">
+                    <select class="recordForm-control" id="dailyType" name="dailyType">
+                        <option value="daily-cup">環保杯</option>
+                        <option value="daily-tableware">環保餐具</option>
+                        <option value="daily-bag">環保袋</option>
+                    </select>
+
+                    <div class="gram-inputs" id="gramRadios">
+                        <label class="gram">
+                            <input type="radio" name="radio" id="smallRadio">
+                            <span class="name" id="small">小(5g)</span>
+                        </label>
+                        <label class="gram">
+                            <input type="radio" name="radio" id="mediumRadio">
+                            <span class="name" id="medium">中(10g)</span>
+                        </label>
+                        <label class="gram">
+                            <input type="radio" name="radio" id="largeRadio">
+                            <span class="name" id="large">大(15g)</span>
+                        </label>
+                        <label class="gram">
+                            <input type="radio" name="radio" id="customRadio">
+                            <span class="name" id="custom">自訂</span>
+                        </label>
+                    </div>
+
+                    <input id="gram" name="gram" class="input" type="number" placeholder="請輸入公克數">
+                </div>
+            </label>
+            <!-- 儲存 -->
+            <input id="saveRecord" class="save-button" type="submit" value="儲存">
+            <input id="updateRecord" class="save-button" type="submit" value="確認更新" style="display: none">
+            <input id="deleteRecord" class="save-button" type="submit" value="刪除資料" style="display: none">
+        </form>
+    </div>
+</div>
+
+<!-- 懸浮窗：查看紀錄 -->
+<div id="recordListFW" onclick="closeFW(event)">
+    <div class="recordContainer" id="activityListModal">
+        <!-- 關閉 -->
+        <button class="btn"  id="closeListModal">
+            <svg viewBox="0 0 20 20" height="17.5" width="15" xmlns="http://www.w3.org/2000/svg" class="icon">
+                <g>
+                    <line x1="16.9999" y1="7" x2="7.00001" y2="16.9999" id="Path" stroke="#0C0310" stroke-width="2" stroke-linecap="round"> </line>
+                    <line x1="7.00006" y1="7" x2="17" y2="16.9999" id="Path" stroke="#0C0310" stroke-width="2" stroke-linecap="round"> </line>
+                </g>
+            </svg>
+        </button>
+
+        <div class="recordHeading" id="activityListModalLabel">歷史記錄</div>
+        <div class="chart-box" id="chartBox" style="display: none; width: 300px; height: 300px;"><canvas id="recordChart" style="display: block; box-sizing: border-box; height: 279px; width: 279px;"></canvas></div>
+        <div style="display: flex; justify-content: space-between;">
+            <div style="flex:1; display: inline-flex; align-items: center;">
+                <p style="margin-top:16px; font-family: 'Crimson Pro', serif; align-items: center; font-size: 12px; color: rgb(123, 125, 127);">起始：</p>
+                <input type="date" id="startDate" style="font-family: 'Crimson Pro', serif; align-items: center; font-size: 12px; color: rgb(123, 125, 127);"/>
+            </div>
+            <div style="flex:1; display: inline-flex; align-items: center;">
+                <p style="margin-top:16px; font-family: 'Crimson Pro', serif; align-items: center; font-size: 12px; color: rgb(123, 125, 127);">結束：</p>
+                <input type="date" id="endDate" style="font-family: 'Crimson Pro', serif; align-items: center; font-size: 12px; color: rgb(123, 125, 127);"/>
+            </div>
+        </div>
+        <div id="typeSelect" style="margin-bottom: 10px; display: flex; justify-content: space-between;">
+            <select class="recordForm-control" id="category" style="flex: 1; font-size: 11px;">
+                <optgroup label="類別">
+                    <option value="all">全部</option>
+                    <option value="traffic">交通</option>
+                    <option value="daily">生活用品</option>
+                </optgroup>
+            </select>
+            <select class="recordForm-control" id="sortType" style="flex: 1; font-size: 11px;">
+                <optgroup label="排序依據">
+                    <option value="time">時間</option>
+                    <option value="footprint">減碳量</option>
+                </optgroup>
+            </select>
+            <select class="recordForm-control" id="sortMethod" style="flex: 1; font-size: 11px;">
+                <optgroup label="時間" id="method">
+                    <option value="old" id="option1">遠到近</option>
+                    <option value="new" id="option2">近到遠</option>
+                </optgroup>
+            </select>
+        </div>
+        <div id="listContent" style="font-family: 'Crimson Pro', serif; align-items: center; font-size: 12px; max-width: 350px;">沒有紀錄</div>
+        <div style="display: flex">
+            <input id="editRecord" class="save-button" type="submit" value="編輯">
+            <input id="saveEditRecord" class="save-button" type="submit" value="完成" style="display: none;">
+            <input id="deleteEditRecord" class="save-button" type="submit" value="刪除" style="display: none;">
+        </div>
+    </div>
+</div>
+
+<!-- 懸浮窗：確認關閉新增/修改 -->
+<div id="closeAuthFW" onclick="closeFW(event)">
+    <div id="closeAuthModal" class="settingContainer" style="width:300px; height: 200px;">
+        <!-- 關閉 -->
+        <button class="btn" id="closeAuthBtn" style="top:10px; right:10px;">
+            <svg viewBox="0 0 20 20" height="17.5" width="15" xmlns="http://www.w3.org/2000/svg" class="icon">
+                <g>
+                    <line x1="16.9999" y1="7" x2="7.00001" y2="16.9999" id="Path" stroke="#0C0310" stroke-width="2" stroke-linecap="round"> </line>
+                    <line x1="7.00006" y1="7" x2="17" y2="16.9999" id="Path" stroke="#0C0310" stroke-width="2" stroke-linecap="round"> </line>
+                </g>
+            </svg>
+        </button>
+
+        <div class="recordHeading" id="closeAuthModalLabel">要關閉視窗嗎？</div>
+        <div style="font-family: 'Crimson Pro', serif; font-size: 15px; display: inline">目前新增/更新的紀錄會遺失</div>
+
+        <button class="setBtn" id="closeRecord" style="background-color: rgb(255, 69, 69); width: 125px; margin-top: 10px;">
+            <div class="setText" style="right: 12%">關閉</div>
+        </button>
+    </div>
+</div>
+</body>
+
+<script src="/frontend/map.js"></script>
+<!-- 初始化地圖 -->
+<script async defer th:src="@{'https://maps.googleapis.com/maps/api/js?key=' + ${apiKey} + '&callback=initMap&libraries=geometry'}"></script>
+
+<script src="/frontend/mapUI.js"></script>
+</html>
