@@ -18,7 +18,9 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-
+    permissions:
+      checks: write
+      contents: read
     steps:
       - uses: actions/checkout@v3
       - name: Set up JDK 17
@@ -31,14 +33,7 @@ jobs:
         run: mvn -B -DskipTests package --file pom.xml
       - name: Test
         run: mvn -batch-mode test
-      - name: Report
-        uses: dorny/test-reporter@v1
-        if: always()
-        with:
-         name: Maven Tests
-         path: target/surefire-reports/*.xml
-         reporter: java-junit
-         fail-on-error: true
+
       - name: Publish Test Report
         if: success() || failure()
         uses: scacap/action-surefire-report@v1
